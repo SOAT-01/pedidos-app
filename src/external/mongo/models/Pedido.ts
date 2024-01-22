@@ -1,4 +1,3 @@
-import { Cliente } from "entities/cliente";
 import { Item, StatusPagamentoEnum, StatusPedidoEnum } from "entities/pedido";
 import mongoose from "mongoose";
 
@@ -9,6 +8,10 @@ const ItemSchema = new mongoose.Schema<Item>({
     },
     quantidade: { type: Number, required: true, min: 1 },
     preco: { type: Number },
+    nome: {
+        type: String,
+        required: true,
+    },
 });
 
 const ClienteSchema = new mongoose.Schema({
