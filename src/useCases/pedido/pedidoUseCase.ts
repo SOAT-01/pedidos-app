@@ -1,5 +1,5 @@
 import { PedidoMapper } from "adapters/mappers";
-import { StatusPagamentoEnum, StatusPedidoEnum } from "entities/pedido";
+import { Item, StatusPagamentoEnum, StatusPedidoEnum } from "entities/pedido";
 import {
     ClienteGateway,
     PedidoGateway,
@@ -62,13 +62,19 @@ export class PedidoUseCase implements IPedidoUseCase {
 
         const ids = pedido.itens.map((item) => item.produtoId);
 
-        const itensPedido = await this.produtoGateway.getByIds(ids);
+        const produtos = await this.produtoGateway.getByIds(ids);
 
-        const itensComPreco = pedido.itens.map((item) => ({
-            ...item,
-            preco: itensPedido.find((produto) => produto.id === item.produtoId)
-                .preco,
-        }));
+        const itensComPreco: Item[] = pedido.itens.map((item) => {
+            const produto = produtos.find(
+                (produto) => produto.id === item.produtoId,
+            );
+            return {
+                produtoId: produto.id,
+                nome: produto.nome,
+                preco: produto.preco,
+                quantidade: item.quantidade,
+            };
+        });
 
         let cliente: Cliente;
 
