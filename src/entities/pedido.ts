@@ -12,7 +12,7 @@ export enum StatusPedidoEnum {
 export enum StatusPagamentoEnum {
     Pagamento_pendente = "pagamento_pendente",
     Pagamento_aprovado = "pagamento_aprovado",
-    Pagamento_nao_autorizado = "pagamento_nao_autorizado"
+    Pagamento_nao_autorizado = "pagamento_nao_autorizado",
 }
 
 export type StatusPedido = `${StatusPedidoEnum}`;
@@ -20,6 +20,7 @@ export type StatusPagamento = `${StatusPagamentoEnum}`;
 
 export interface Item {
     produtoId: string;
+    nome?: string;
     quantidade: number;
     preco?: number;
 }
