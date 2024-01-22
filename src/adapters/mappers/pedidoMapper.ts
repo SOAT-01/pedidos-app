@@ -1,6 +1,7 @@
 import { Cliente } from "entities/cliente";
 import { Pedido } from "entities/pedido";
-import { PedidoDTO, ClienteDTO } from "useCases";
+import { ClienteDTO } from "external/clienteService";
+import { PedidoDTO } from "useCases";
 import { Cpf, Email } from "valueObjects";
 
 export class PedidoMapper {
