@@ -27,6 +27,7 @@ const PedidoFields = {
                 produtoId: { type: "string" },
                 quantidade: { type: "number" },
                 preco: { type: "number" },
+                nome: { type: "string" },
             },
         },
     },
@@ -302,7 +303,7 @@ export const PedidoPaths = {
             },
         },
     },
-    "/pedido/{id}/payment-checkout": {
+    "/pedido/{id}/update-payment-status": {
         patch: {
             tags: ["pedido"],
             summary: "Rota para atualizar o status de pagamento de um pedido",
@@ -317,6 +318,24 @@ export const PedidoPaths = {
                     },
                 },
             ],
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                statusPagamento: {
+                                    type: "string",
+                                    enum: PagamentoEnum,
+                                    default: "pagamento_aprovado",
+                                },
+                            },
+                            required: "statusPagamento",
+                        },
+                    },
+                },
+            },
             responses: {
                 201: {
                     description: "Status de pagamento do pedido atualizado",
