@@ -27,7 +27,7 @@ export class PedidoMapper {
     }
 
     public static toDTO(pedido: Pedido): PedidoDTO {
-        const { cliente = undefined } = pedido;
+        const cliente = pedido?.cliente || undefined;
 
         return {
             id: pedido.id,
@@ -37,12 +37,10 @@ export class PedidoMapper {
             itens: pedido.itens,
             observacoes: pedido.observacoes,
             ...(cliente && {
-                cliente: {
-                    id: cliente.id,
-                    nome: cliente.nome,
-                    email: cliente.email.value,
-                    cpf: cliente.cpf.value,
-                },
+                clienteId: cliente?.id,
+                clienteNome: cliente?.nome,
+                clienteEmail: cliente?.email?.value,
+                clienteCpf: cliente?.cpf?.value,
             }),
         };
     }
