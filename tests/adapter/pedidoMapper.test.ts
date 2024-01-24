@@ -28,7 +28,7 @@ describe("Given PedidoMapper", () => {
 
     describe("When toDomain is called", () => {
         it("should parse a domain pedido DTO to domain format", async () => {
-            const parsed = PedidoMapper.toDomain(PedidoDTOMock, ClienteDTOMock);
+            const parsed = PedidoMapper.toDomain(PedidoDTOMock);
 
             expect(parsed.valorTotal).toEqual(PedidoDTOMock.valorTotal);
             expect(parsed.status).toEqual(PedidoDTOMock.status);

@@ -28,7 +28,7 @@ export function makePedidoRouter(): Router {
         pedidoController.patchStatus(req, res, next);
     });
 
-    pedidoRouter.patch("/:id/payment-checkout", async (req, res, next) => {
+    pedidoRouter.patch("/:id/update-payment-status", async (req, res, next) => {
         pedidoController.patchPaymentStatus(req, res, next);
     });
 

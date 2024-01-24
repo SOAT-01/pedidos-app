@@ -100,9 +100,13 @@ export class PedidoController {
         next: NextFunction,
     ): Promise<Response> {
         const { id } = req.params;
+        const { statusPagamento } = req.body;
 
         try {
-            const result = await this.pedidoUseCase.updatePaymentStatus(id);
+            const result = await this.pedidoUseCase.updatePaymentStatus(
+                id,
+                statusPagamento,
+            );
             return res.status(StatusCode.ok).json(result);
         } catch (error) {
             next(error);
