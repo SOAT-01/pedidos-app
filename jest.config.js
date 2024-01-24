@@ -12,4 +12,5 @@ module.exports = {
     testRegex: "tests/.*\\.(test|spec)\\.ts$",
     moduleFileExtensions: ["ts", "js", "json", "node"],
     testEnvironment: "node",
+    coveragePathIgnorePatterns: ["valueObject.ts"],
 };

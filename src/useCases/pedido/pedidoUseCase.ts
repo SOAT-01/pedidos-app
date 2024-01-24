@@ -1,5 +1,5 @@
 import { PedidoMapper } from "adapters/mappers";
-import { StatusPagamentoEnum, StatusPedidoEnum } from "entities/pedido";
+import { Item, StatusPagamentoEnum, StatusPedidoEnum } from "entities/pedido";
 import {
     ClienteGateway,
     PedidoGateway,
@@ -12,6 +12,7 @@ import { PedidoDTO } from "./dto";
 import { IPedidoUseCase } from "./pedido.interface";
 import { BadError } from "utils/errors/badError";
 import { Cliente } from "entities/cliente";
+import { PagamentoToStatusMap } from "utils/PagamentoToStatusMap";
 
 export class PedidoUseCase implements IPedidoUseCase {
     constructor(
@@ -62,13 +63,19 @@ export class PedidoUseCase implements IPedidoUseCase {
 
         const ids = pedido.itens.map((item) => item.produtoId);
 
-        const itensPedido = await this.produtoGateway.getByIds(ids);
+        const produtos = await this.produtoGateway.getByIds(ids);
 
-        const itensComPreco = pedido.itens.map((item) => ({
-            ...item,
-            preco: itensPedido.find((produto) => produto.id === item.produtoId)
-                .preco,
-        }));
+        const itensComPreco: Item[] = pedido.itens.map((item) => {
+            const produto = produtos.find(
+                (produto) => produto.id === item.produtoId,
+            );
+            return {
+                produtoId: produto.id,
+                nome: produto.nome,
+                preco: produto.preco,
+                quantidade: item.quantidade,
+            };
+        });
 
         let cliente: Cliente;
 
@@ -173,22 +180,32 @@ export class PedidoUseCase implements IPedidoUseCase {
         return PedidoMapper.toDTO(result);
     }
 
-    public async updatePaymentStatus(id: string): Promise<PedidoDTO> {
-        const pedidoToUpdateStatus = await this.pedidoGateway.getById(id);
+    public async updatePaymentStatus(
+        id: string,
+        statusPagamento: StatusPagamentoEnum,
+    ): Promise<PedidoDTO> {
+        AssertionConcern.assertArgumentNotEmpty(
+            statusPagamento,
+            "É necessário informar o status do pagamento",
+        );
 
-        if (!pedidoToUpdateStatus) {
+        const pedido = await this.pedidoGateway.getById(id);
+
+        if (!pedido) {
             throw new ResourceNotFoundError("Pedido não encontrado");
         }
-        if (
-            pedidoToUpdateStatus.pagamento !==
-            StatusPagamentoEnum.Pagamento_pendente
-        ) {
-            throw new Error("Pedido já foi pago");
+
+        if (pedido.pagamento !== StatusPagamentoEnum.Pagamento_pendente) {
+            throw new BadError("Pedido com pagamento já processado");
         }
 
+        const statusPedido = PagamentoToStatusMap[statusPagamento];
+
         const result = await this.pedidoGateway.update(id, {
-            status: StatusPedidoEnum.Recebido,
+            status: statusPedido,
+            pagamento: statusPagamento,
         });
+
         return PedidoMapper.toDTO(result);
     }
 }

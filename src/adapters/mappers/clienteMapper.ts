@@ -1,5 +1,5 @@
 import { Cliente } from "entities/cliente";
-import { ClienteDTO } from "useCases";
+import { ClienteDTO } from "external/clienteService";
 
 import { Email, Cpf } from "valueObjects";
 
@@ -11,14 +11,5 @@ export class ClienteMapper {
             email: Email.create(dto.email),
             cpf: Cpf.create(dto.cpf),
         });
-    }
-
-    public static toDTO(cliente: Cliente): ClienteDTO {
-        return {
-            id: cliente.id,
-            nome: cliente.nome,
-            email: cliente.email.value,
-            cpf: cliente.cpf.value,
-        };
     }
 }
