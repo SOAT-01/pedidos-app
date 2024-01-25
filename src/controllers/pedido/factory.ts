@@ -12,8 +12,8 @@ import { PedidoController } from "./controller";
 export class PedidoControllerFactory {
     public static create(): PedidoController {
         const pedidoGateway = new PedidoMongoGateway(PedidoModel);
-        const produtoGateway = new ProdutoServiceGateway(clienteServiceApi);
-        const clienteGateway = new ClienteServiceGateway(produtoServiceApi);
+        const produtoGateway = new ProdutoServiceGateway(produtoServiceApi);
+        const clienteGateway = new ClienteServiceGateway(clienteServiceApi);
 
         const pedidoUseCase = new PedidoUseCase(
             pedidoGateway,
