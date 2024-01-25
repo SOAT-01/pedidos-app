@@ -17,7 +17,6 @@ describe("Given PedidoEntity", () => {
         it("should create a new instance of Pedido", () => {
             const pedido = new Pedido({
                 valorTotal: 10,
-                status: StatusPedidoEnum.Recebido,
                 cliente: new Cliente({
                     id: "000",
                     nome: "John Doe",

@@ -13,6 +13,7 @@ import { IPedidoUseCase } from "./pedido.interface";
 import { BadError } from "utils/errors/badError";
 import { Cliente } from "entities/cliente";
 import { PagamentoToStatusMap } from "utils/PagamentoToStatusMap";
+import { ValidationError } from "utils/errors/validationError";
 
 export class PedidoUseCase implements IPedidoUseCase {
     constructor(
@@ -41,24 +42,18 @@ export class PedidoUseCase implements IPedidoUseCase {
         return PedidoMapper.toDTO(result);
     }
 
-    public async getPaymentStatus(id: string): Promise<PedidoDTO> {
-        const result = await this.pedidoGateway.getById(id);
-
-        if (!result) throw new ResourceNotFoundError("Pedido não encontrado");
-
-        return PedidoMapper.toDTO(result);
-    }
-
     public async checkout(pedido: PedidoDTO): Promise<PedidoDTO> {
         if (pedido.status && pedido.status !== StatusPedidoEnum.Recebido) {
-            throw new Error("Não é necessário informar o status");
+            throw new ValidationError("Não é necessário informar o status");
         }
 
         if (
             pedido.pagamento &&
             pedido.pagamento !== StatusPagamentoEnum.Pagamento_pendente
         ) {
-            throw new Error("Não é necessário informar o status de pagamento");
+            throw new ValidationError(
+                "Não é necessário informar o status de pagamento",
+            );
         }
 
         const ids = pedido.itens.map((item) => item.produtoId);

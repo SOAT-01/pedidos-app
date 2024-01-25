@@ -6,11 +6,14 @@ import {
     PedidoGateway,
     ProdutoGateway,
 } from "interfaces/gateways";
-import { PedidoUseCase } from "useCases";
+import { PedidoDTO, PedidoUseCase } from "useCases";
+import { BadError } from "utils/errors/badError";
+import { ResourceNotFoundError } from "utils/errors/resourceNotFoundError";
+import { ValidationError } from "utils/errors/validationError";
 import { Email, Cpf } from "valueObjects";
 
 const mockClienteDTO = {
-    id: "000",
+    id: "ec238204-b1cb-4ce9-baa0-890b4ddfde36",
     nome: "John Doe",
     email: "john_doe@user.com.br",
     cpf: "111.111.111-11",
@@ -42,9 +45,12 @@ const SOBREMESA = new Produto({
 });
 
 const mockPedidoDTO1 = {
-    id: "any_id",
+    id: "001",
     valorTotal: 10,
-    cliente: mockClienteDTO,
+    clienteId: mockClienteDTO.id,
+    clienteCpf: mockClienteDTO.cpf,
+    clienteEmail: mockClienteDTO.email,
+    clienteNome: mockClienteDTO.nome,
     status: StatusPedidoEnum.Recebido,
     pagamento: StatusPagamentoEnum.Pagamento_pendente,
     itens: [
@@ -55,11 +61,15 @@ const mockPedidoDTO1 = {
     ],
 };
 
-const mockPedidoDTO2 = {
+const mockPedidoDTO2: PedidoDTO = {
     id: "any_another_id",
     valorTotal: 29.9,
     status: StatusPedidoEnum.Em_preparacao,
     pagamento: StatusPagamentoEnum.Pagamento_aprovado,
+    clienteId: mockClienteDTO.id,
+    clienteCpf: mockClienteDTO.cpf,
+    clienteEmail: mockClienteDTO.email,
+    clienteNome: mockClienteDTO.nome,
     itens: [
         {
             produtoId: LANCHE.id,
@@ -98,10 +108,10 @@ describe("Given PedidoUseCases", () => {
         new Pedido({
             id: mockPedidoDTO1.id,
             valorTotal: mockPedidoDTO1.valorTotal,
-            cliente: mockCliente,
             status: mockPedidoDTO1.status,
             pagamento: mockPedidoDTO1.pagamento,
             itens: mockPedidoDTO1.itens,
+            cliente: mockCliente,
         }),
         new Pedido({
             id: mockPedidoDTO2.id,
@@ -109,6 +119,7 @@ describe("Given PedidoUseCases", () => {
             status: mockPedidoDTO2.status,
             pagamento: mockPedidoDTO2.pagamento,
             itens: mockPedidoDTO2.itens,
+            cliente: mockCliente,
         }),
         new Pedido({
             id: mockPedidoDTO3.id,
@@ -120,15 +131,6 @@ describe("Given PedidoUseCases", () => {
     ];
 
     class PedidoGatewayStub implements PedidoGateway {
-        updateStatusPagamento(
-            id: string,
-            status:
-                | "pagamento_pendente"
-                | "pagamento_aprovado"
-                | "pagamento_nao_autorizado",
-        ): Promise<Pedido> {
-            throw new Error("Method not implemented.");
-        }
         getById(id: string): Promise<Pedido> {
             return new Promise((resolve) =>
                 resolve(mockPedidos.find((p) => p.id === id)),
@@ -148,6 +150,23 @@ describe("Given PedidoUseCases", () => {
         }
         updateStatus(id: string, status: StatusPedidoEnum): Promise<Pedido> {
             return new Promise((resolve) => resolve(mockPedidos[1]));
+        }
+        updateStatusPagamento(
+            id: string,
+            status: StatusPagamentoEnum,
+        ): Promise<Pedido> {
+            return new Promise((resolve) =>
+                resolve(
+                    new Pedido({
+                        id: mockPedidoDTO1.id,
+                        valorTotal: mockPedidoDTO1.valorTotal,
+                        status: mockPedidoDTO1.status,
+                        pagamento: status,
+                        itens: mockPedidoDTO1.itens,
+                        cliente: mockCliente,
+                    }),
+                ),
+            );
         }
     }
 
@@ -176,6 +195,21 @@ describe("Given PedidoUseCases", () => {
 
     afterAll(() => {
         jest.clearAllMocks();
+    });
+
+    describe("When getById is called", () => {
+        it("should return found pedido", async () => {
+            const result = jest.spyOn(gatewayStub, "getById");
+
+            const pedido = await sut.getById(mockPedidoDTO1.id);
+            expect(result).toHaveBeenCalled();
+            expect(pedido).toEqual(mockPedidoDTO1);
+        });
+        it("should throw a ResourceNotFoundError if pedido is not found", async () => {
+            const action = sut.getById("wrong-id");
+
+            await expect(action).rejects.toThrowError(ResourceNotFoundError);
+        });
     });
 
     describe("When getAll is called", () => {
@@ -209,25 +243,77 @@ describe("Given PedidoUseCases", () => {
         });
     });
 
-    describe("When checkout is called", () => {
-        it("should call checkout on the gateway and return the created pedido id", async () => {
-            const create = jest.spyOn(gatewayStub, "checkout");
+    describe("Given checkout", () => {
+        describe("When checkout is called with valid payload", () => {
+            it("should return the created pedido id", async () => {
+                const create = jest.spyOn(gatewayStub, "checkout");
 
-            const pedido = await sut.checkout({
-                // valorTotal: 29.9,
-                itens: [
-                    {
-                        produtoId: LANCHE.id,
-                        quantidade: 1,
-                    },
-                    {
-                        produtoId: SOBREMESA.id,
-                        quantidade: 1,
-                    },
-                ],
+                const pedido = await sut.checkout({
+                    itens: mockPedidoDTO2.itens,
+                });
+                expect(create).toHaveBeenCalled();
+                expect(pedido).toEqual(mockPedidoDTO2);
             });
-            expect(create).toHaveBeenCalled();
-            expect(pedido).toEqual(mockPedidoDTO2);
+        });
+        describe("When checkout is called with valid payload and a related cliente", () => {
+            it("should return the created pedido id", async () => {
+                const createPedido = jest.spyOn(gatewayStub, "checkout");
+                const getClienteById = jest.spyOn(
+                    clienteGatewayStub,
+                    "getById",
+                );
+
+                const pedido = await sut.checkout({
+                    clienteId: mockClienteDTO.id,
+                    clienteCpf: mockClienteDTO.cpf,
+                    clienteEmail: mockClienteDTO.email,
+                    clienteNome: mockClienteDTO.nome,
+                    itens: mockPedidoDTO2.itens,
+                });
+
+                expect(createPedido).toHaveBeenCalled();
+                expect(getClienteById).toHaveBeenCalled();
+                expect(pedido).toEqual(mockPedidoDTO2);
+                expect(pedido.clienteId).toEqual(mockClienteDTO.id);
+                expect(pedido.clienteCpf).toEqual(mockClienteDTO.cpf);
+                expect(pedido.clienteEmail).toEqual(mockClienteDTO.email);
+            });
+        });
+        describe("When checkout is called with a set status", () => {
+            it("should throw a validationError", async () => {
+                const create = jest.spyOn(gatewayStub, "checkout");
+
+                const action = sut.checkout({
+                    status: StatusPedidoEnum.Pronto,
+                    itens: [
+                        {
+                            produtoId: LANCHE.id,
+                            quantidade: 1,
+                        },
+                    ],
+                });
+
+                await expect(action).rejects.toThrowError(ValidationError);
+
+                expect(create).toHaveBeenCalled();
+            });
+        });
+        describe("When checkout is called with a set pagamento status", () => {
+            it("should throw a validationError", async () => {
+                const create = jest.spyOn(gatewayStub, "checkout");
+                const action = sut.checkout({
+                    pagamento: StatusPagamentoEnum.Pagamento_aprovado,
+                    itens: [
+                        {
+                            produtoId: LANCHE.id,
+                            quantidade: 1,
+                        },
+                    ],
+                });
+                await expect(action).rejects.toThrowError(ValidationError);
+
+                expect(create).toHaveBeenCalled();
+            });
         });
     });
 
@@ -345,7 +431,7 @@ describe("Given PedidoUseCases", () => {
 
         it("should throw an error if the order's payment is not authorized yet", async () => {
             const pedido = sut.updateStatus(
-                "any_id",
+                "001",
                 StatusPedidoEnum.Em_preparacao,
             );
 
@@ -382,43 +468,43 @@ describe("Given PedidoUseCases", () => {
             );
         });
     });
-    // describe("When updatePaymentStatus is called", () => {
-    //     it("should call update on the gateway and return the pedido with the updated status to Recebido", async () => {
-    //         const updateSpy = jest
-    //             .spyOn(gatewayStub, "update")
-    //             .mockResolvedValueOnce(new Pedido(mockPedidoDTO3));
-    //         const pedido = await sut.updatePaymentStatus("any_another_created_id");
-    //         expect(updateSpy).toHaveBeenCalledWith("any_another_created_id", {
-    //             pagamento: StatusPagamentoEnum.Pagamento_aprovado,
-    //             status: StatusPedidoEnum.Recebido,
-    //         });
-    //         expect(pedido).toEqual(mockPedidoDTO3);
-    //     });
 
-    //     it("should throw an error if the pedido does not exist", async () => {
-    //         const getByIdSpy = jest
-    //             .spyOn(gatewayStub, "getById")
-    //             .mockResolvedValueOnce(null);
+    describe("When updatePaymentStatus is called", () => {
+        it("should return pedido Em_preparacao for Pagamento_aprovado case", async () => {
+            const id = "001";
+            const newStatus = StatusPagamentoEnum.Pagamento_aprovado;
 
-    //         const pedido = sut.updatePaymentStatus("nonexistent-id");
+            const pedido = await sut.updatePaymentStatus(id, newStatus);
 
-    //         await expect(pedido).rejects.toThrowError(
-    //             new Error("Pedido não encontrado"),
-    //         );
-    //         expect(getByIdSpy).toHaveBeenCalledWith("nonexistent-id");
-    //     });
+            expect(pedido.status).toEqual(StatusPedidoEnum.Em_preparacao);
+            expect(pedido.pagamento).toEqual(newStatus);
+        });
+        it("should throw a ResourceNotFoundError if pedido is not found", async () => {
+            const id = "wrong-id";
+            const newStatus = StatusPagamentoEnum.Pagamento_aprovado;
 
-    //     it("should throw an error if the pedido is already paid", async () => {
-    //         const getByIdSpy = jest
-    //             .spyOn(gatewayStub, "getById")
-    //             .mockResolvedValueOnce(new Pedido(mockPedidoDTO2));
+            const action = sut.updatePaymentStatus(id, newStatus);
 
-    //         const pedido = sut.updatePaymentStatus("already-paid-id");
+            await expect(action).rejects.toThrowError(ResourceNotFoundError);
+        });
+        it("should throw a BadError if pagamento was already processed", async () => {
+            jest.spyOn(gatewayStub, "getById").mockResolvedValueOnce(
+                new Pedido({
+                    id: mockPedidoDTO1.id,
+                    valorTotal: mockPedidoDTO1.valorTotal,
+                    status: mockPedidoDTO1.status,
+                    pagamento: StatusPagamentoEnum.Pagamento_aprovado,
+                    itens: mockPedidoDTO1.itens,
+                    cliente: mockCliente,
+                }),
+            );
 
-    //         await expect(pedido).rejects.toThrowError(
-    //             new Error("Pedido já foi pago"),
-    //         );
-    //         expect(getByIdSpy).toHaveBeenCalledWith("already-paid-id");
-    //     });
-    // });
+            const id = "001";
+            const newStatus = StatusPagamentoEnum.Pagamento_nao_autorizado;
+
+            const action = sut.updatePaymentStatus(id, newStatus);
+
+            await expect(action).rejects.toThrowError(BadError);
+        });
+    });
 });

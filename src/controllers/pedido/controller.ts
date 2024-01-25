@@ -39,7 +39,7 @@ export class PedidoController {
         const { id } = req.params;
 
         try {
-            const result = await this.pedidoUseCase.getPaymentStatus(id);
+            const result = await this.pedidoUseCase.getById(id);
             return res
                 .status(StatusCode.ok)
                 .json({ pagamento: result.pagamento });
