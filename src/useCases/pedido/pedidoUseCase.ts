@@ -183,6 +183,11 @@ export class PedidoUseCase implements IPedidoUseCase {
             statusPagamento,
             "É necessário informar o status do pagamento",
         );
+        AssertionConcern.assertArgumentIsValid(
+            statusPagamento,
+            Object.values(StatusPagamentoEnum),
+            "Status de pagamento informado é invalido",
+        );
 
         const pedido = await this.pedidoGateway.getById(id);
 
