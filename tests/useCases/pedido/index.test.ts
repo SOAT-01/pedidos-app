@@ -487,6 +487,22 @@ describe("Given PedidoUseCases", () => {
 
             await expect(action).rejects.toThrowError(ResourceNotFoundError);
         });
+        it("should throw a ValidationError if input status is invalid", async () => {
+            const id = "001";
+            const newStatus = "status_invalido" as any;
+
+            const action = sut.updatePaymentStatus(id, newStatus);
+
+            await expect(action).rejects.toThrowError(ValidationError);
+        });
+        it("should throw a ValidationError if status is not present", async () => {
+            const id = "001";
+            const newStatus = undefined as any;
+
+            const action = sut.updatePaymentStatus(id, newStatus);
+
+            await expect(action).rejects.toThrowError(ValidationError);
+        });
         it("should throw a BadError if pagamento was already processed", async () => {
             jest.spyOn(gatewayStub, "getById").mockResolvedValueOnce(
                 new Pedido({
