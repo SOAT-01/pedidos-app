@@ -46,8 +46,8 @@ jobs:
         docker login -u $DOCKER_USER -p $DOCKER_ACCESS_TOKEN
 
     - name: "🖼️ build docker image"
-      run: docker build . --file Dockerfile --tag ${{secrets.DOCKER_USER}}/app-fast-food-clientes:latest
+      run: docker build . --file Dockerfile --tag ${{secrets.DOCKER_USER}}/app-fast-food-pedidos:latest
 
     - name: "🚀 docker push"
-      run: docker push ${{secrets.DOCKER_USER}}/app-fast-food-clientes:latest
+      run: docker push ${{secrets.DOCKER_USER}}/app-fast-food-pedidos:latest
         
