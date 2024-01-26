@@ -14,15 +14,6 @@ export class ProdutoServiceGateway implements ProdutoGateway {
         });
         const produtos = response.data;
 
-        // {
-        //     id: result.id,
-        //     nome: result.nome,
-        //     preco: Number(result.preco),
-        //     categoria: result.categoria as Produto["categoria"],
-        //     descricao: result.descricao,
-        //     imagem: result.imagem,
-        // }
-
         return produtos.map((result) => ProdutoMapper.toDomain(result));
     }
 }
