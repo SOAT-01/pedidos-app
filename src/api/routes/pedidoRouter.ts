@@ -32,5 +32,9 @@ export function makePedidoRouter(): Router {
         pedidoController.patchPaymentStatus(req, res, next);
     });
 
+    pedidoRouter.delete("/cliente/:id", async (req, res, next) => {
+        pedidoController.deleteClienteData(req, res, next);
+    });
+
     return pedidoRouter;
 }

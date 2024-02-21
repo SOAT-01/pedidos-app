@@ -169,6 +169,9 @@ describe("Given PedidoUseCases", () => {
         updateStatus(id: string, status: StatusPedidoEnum): Promise<Pedido> {
             return new Promise((resolve) => resolve(mockPedidos[1]));
         }
+        deleteClienteData(id: string): Promise<void> {
+            return new Promise((resolve) => resolve());
+        }
         updateStatusPagamento(
             id: string,
             status: StatusPagamentoEnum,

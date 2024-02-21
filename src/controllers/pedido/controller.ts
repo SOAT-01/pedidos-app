@@ -112,4 +112,19 @@ export class PedidoController {
             next(error);
         }
     }
+
+    public async deleteClienteData(
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<Response> {
+        const { id } = req.params;
+
+        try {
+            await this.pedidoUseCase.deleteClienteData(id);
+            return res.status(StatusCode.ok).json();
+        } catch (error) {
+            next(error);
+        }
+    }
 }
