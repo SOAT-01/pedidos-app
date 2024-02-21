@@ -120,6 +120,12 @@ export class PedidoController {
     ): Promise<Response> {
         const { id } = req.params;
 
+        if (!id) {
+            return res
+                .status(StatusCode.unprocessableEntity)
+                .json({ message: "Missing identifier id" });
+        }
+
         try {
             await this.pedidoUseCase.deleteClienteData(id);
             return res.status(StatusCode.ok).json();
