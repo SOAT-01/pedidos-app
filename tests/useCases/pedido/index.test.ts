@@ -553,4 +553,15 @@ describe("Given PedidoUseCases", () => {
             await expect(action).rejects.toThrowError(BadError);
         });
     });
+
+    describe("When deleteClienteData is called", () => {
+        it("should call deleteClienteData on the gateway", async () => {
+            const deleteClienteDataSpy = jest.spyOn(
+                gatewayStub,
+                "deleteClienteData",
+            );
+            await sut.deleteClienteData("any_another_id");
+            expect(deleteClienteDataSpy).toHaveBeenCalledWith("any_another_id");
+        });
+    });
 });
