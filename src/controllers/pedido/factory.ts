@@ -1,25 +1,9 @@
-import {
-    ClienteServiceGateway,
-    PedidoMongoGateway,
-    ProdutoServiceGateway,
-} from "gateways";
-import { PedidoUseCase } from "useCases";
-import { PedidoModel } from "external/mongo/models";
-import { clienteServiceApi } from "external/clienteService";
-import { produtoServiceApi } from "external/produtoService";
+import { PedidoUseCaseFactory } from "useCases";
 import { PedidoController } from "./controller";
 
 export class PedidoControllerFactory {
     public static create(): PedidoController {
-        const pedidoGateway = new PedidoMongoGateway(PedidoModel);
-        const produtoGateway = new ProdutoServiceGateway(produtoServiceApi);
-        const clienteGateway = new ClienteServiceGateway(clienteServiceApi);
-
-        const pedidoUseCase = new PedidoUseCase(
-            pedidoGateway,
-            produtoGateway,
-            clienteGateway,
-        );
+        const pedidoUseCase = PedidoUseCaseFactory.create();
 
         return new PedidoController(pedidoUseCase);
     }
