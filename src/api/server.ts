@@ -5,6 +5,7 @@ import { errorHandler } from "./middlewares";
 import { makeServerRouter } from "./routes";
 import { requestLogger } from "../utils/requestLogger";
 import { SwaggerConfig } from "./docs";
+import { confirmacaoPagamentoConsumer } from "external/queueService";
 
 require("dotenv").config();
 
@@ -21,6 +22,9 @@ function buildServer() {
     server.use("/api-docs", serve, setup(SwaggerConfig));
     server.use("/api", makeServerRouter());
     server.use(errorHandler);
+
+    console.log("Starting queue listeners");
+    confirmacaoPagamentoConsumer.start();
 
     return server;
 }
