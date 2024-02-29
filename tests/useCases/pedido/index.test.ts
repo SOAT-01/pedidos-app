@@ -1,16 +1,33 @@
+import { SQS } from "aws-sdk";
 import { Cliente } from "entities/cliente";
 import { StatusPedidoEnum, Pedido, StatusPagamentoEnum } from "entities/pedido";
 import { Produto, CategoriaEnum } from "entities/produto";
+import { PedidoModel } from "external/mongo/models";
+import { QueueManager } from "external/queueService";
+import { SQSClient } from "external/queueService/client";
 import {
     ClienteGateway,
     PedidoGateway,
     ProdutoGateway,
 } from "interfaces/gateways";
+import { ClientSession } from "mongoose";
 import { PedidoDTO, PedidoUseCase } from "useCases";
 import { BadError } from "utils/errors/badError";
 import { ResourceNotFoundError } from "utils/errors/resourceNotFoundError";
 import { ValidationError } from "utils/errors/validationError";
 import { Email, Cpf } from "valueObjects";
+
+jest.mock("aws-sdk", () => {
+    return {
+        SQS: jest.fn().mockImplementation(() => {
+            return {
+                sendMessage: jest.fn().mockReturnValue({
+                    promise: jest.fn(),
+                }),
+            };
+        }),
+    };
+});
 
 const mockClienteDTO = {
     id: "ec238204-b1cb-4ce9-baa0-890b4ddfde36",
@@ -102,6 +119,7 @@ describe("Given PedidoUseCases", () => {
     let gatewayStub: PedidoGateway;
     let produtoGatewayStub: Partial<ProdutoGateway>;
     let clienteGatewayStub: Partial<ClienteGateway>;
+    let queueMock: QueueManager;
     let sut: PedidoUseCase;
 
     const mockPedidos = [
@@ -183,13 +201,24 @@ describe("Given PedidoUseCases", () => {
     }
 
     beforeAll(() => {
+        jest.spyOn(PedidoModel, "startSession").mockImplementation(() => {
+            return Promise.resolve({
+                startTransaction: jest.fn(),
+                commitTransaction: jest.fn(),
+                abortTransaction: jest.fn(),
+                endSession: jest.fn(),
+            } as Partial<ClientSession> as ClientSession);
+        });
         gatewayStub = new PedidoGatewayStub();
         produtoGatewayStub = new ProdutoGatewayStub();
         clienteGatewayStub = new ClienteGatewayStub();
+        queueMock = new QueueManager("test", SQSClient);
         sut = new PedidoUseCase(
+            PedidoModel,
             gatewayStub,
             produtoGatewayStub as ProdutoGateway,
             clienteGatewayStub as ClienteGateway,
+            queueMock,
         );
     });
 
