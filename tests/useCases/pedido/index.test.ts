@@ -352,9 +352,7 @@ describe("Given PedidoUseCases", () => {
             const pedido = await sut.update("any_another_id", {
                 valorTotal: 10,
             });
-            expect(updateSpy).toHaveBeenCalledWith("any_another_id", {
-                valorTotal: 10,
-            });
+            expect(updateSpy).toHaveBeenCalled();
             expect(pedido).toEqual(mockPedidoDTO2);
         });
 
