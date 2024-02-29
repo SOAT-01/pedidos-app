@@ -25,12 +25,9 @@ export const serverConfig = {
         ),
     },
     sqs: {
-        region: parseEnvStr("SQS_REGION", "us-east-1"),
-        accessKeyId: parseEnvStr("SQS_ACCESS_KEY_ID", "AKIASEKWN5VMCC3LDZNW"),
-        secretAccessKey: parseEnvStr(
-            "SQS_SECRET_ACCESS_KEY",
-            "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",
-        ),
+        region: parseEnvStr("SQS_REGION"),
+        accessKeyId: parseEnvStr("SQS_ACCESS_KEY_ID"),
+        secretAccessKey: parseEnvStr("SQS_SECRET_ACCESS_KEY"),
     },
     queues: {
         confirmacaoPagemento: parseEnvStr(
