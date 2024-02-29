@@ -15,6 +15,7 @@ export class QueueConsumerFactory {
         const consumer = Consumer.create({
             queueUrl,
             handleMessage: handler,
+            pollingWaitTimeMs: serverConfig.sqs.pollingWaitTimeMs,
             sqs: new SQSClient({
                 region: serverConfig.sqs.region,
                 credentials: {

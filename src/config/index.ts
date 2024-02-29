@@ -28,6 +28,7 @@ export const serverConfig = {
         region: parseEnvStr("SQS_REGION"),
         accessKeyId: parseEnvStr("SQS_ACCESS_KEY_ID"),
         secretAccessKey: parseEnvStr("SQS_SECRET_ACCESS_KEY"),
+        pollingWaitTimeMs: parseEnvInt("SQS_POLLING_WAIT_TIME", 0),
     },
     queues: {
         confirmacaoPagemento: parseEnvStr(
