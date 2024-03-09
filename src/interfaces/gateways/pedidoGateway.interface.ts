@@ -14,4 +14,5 @@ export interface PedidoGateway {
     ): Promise<Pedido>;
     updateStatus(id: string, status: StatusPedidoEnum): Promise<Pedido>;
     updateStatusPagamento(id: string, status: StatusPagamento): Promise<Pedido>;
+    deleteClienteData(id: string): Promise<void>;
 }

@@ -9,6 +9,8 @@ import { requestLogger } from "../utils/requestLogger";
 import { SwaggerConfig } from "./docs";
 import { confirmacaoPagamentoConsumer } from "external/queueService";
 import { serverConfig } from "config";
+import { anonimizacaoClienteConsumer } from "external/queueService/consumers/anonimizacaoClienteConsumer";
+
 
 require("dotenv").config();
 
@@ -41,6 +43,7 @@ function buildServer() {
 
     console.log("Starting queue listeners");
     confirmacaoPagamentoConsumer.start();
+    anonimizacaoClienteConsumer.start();
 
     return server;
 }

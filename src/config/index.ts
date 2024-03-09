@@ -39,5 +39,9 @@ export const serverConfig = {
             "QUEUE_NOTIFICAO_CLIENTE",
             "https://sqs.us-east-1.amazonaws.com/146747026776/notificacao-cliente",
         ),
+        anonimizacaoCliente: parseEnvStr(
+            "QUEUE_ANONIMIZACAO_CLIENTE",
+            "https://sqs.us-east-1.amazonaws.com/146747026776/anonimizacao-cliente",
+        ),
     },
 } as const;

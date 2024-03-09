@@ -260,4 +260,19 @@ export class PedidoUseCase implements IPedidoUseCase {
             throw new BadError(error);
         }
     }
+
+    async deleteClienteData(clienteId: string): Promise<void> {
+        const session = await this.pedidoModel.startSession();
+        session.startTransaction();
+
+        try {
+            await this.pedidoGateway.deleteClienteData(clienteId);
+            await session.commitTransaction();
+            await session.endSession();
+        } catch (error) {
+            await session.abortTransaction();
+            await session.endSession();
+            throw new BadError(error);
+        }
+    }
 }

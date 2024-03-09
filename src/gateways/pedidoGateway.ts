@@ -246,4 +246,15 @@ export class PedidoMongoGateway implements PedidoGateway {
             { deleted: true, deletedAt: new Date() },
         );
     }
+
+    async deleteClienteData(clienteId: string): Promise<void> {
+        await this.pedidoModel.updateMany(
+            { "cliente.id": clienteId },
+            {
+                "cliente.nome": "Usuário solicitou remoção dos dados",
+                "cliente.email": "usuario-solicitou-remocao@email.com",
+                "cliente.cpf": "123.456.789-10",
+            },
+        );
+    }
 }

@@ -169,6 +169,9 @@ describe("Given PedidoUseCases", () => {
         updateStatus(id: string, status: StatusPedidoEnum): Promise<Pedido> {
             return new Promise((resolve) => resolve(mockPedidos[1]));
         }
+        deleteClienteData(id: string): Promise<void> {
+            return new Promise((resolve) => resolve());
+        }
         updateStatusPagamento(
             id: string,
             status: StatusPagamentoEnum,
@@ -548,6 +551,17 @@ describe("Given PedidoUseCases", () => {
             const action = sut.updatePaymentStatus(id, newStatus);
 
             await expect(action).rejects.toThrowError(BadError);
+        });
+    });
+
+    describe("When deleteClienteData is called", () => {
+        it("should call deleteClienteData on the gateway", async () => {
+            const deleteClienteDataSpy = jest.spyOn(
+                gatewayStub,
+                "deleteClienteData",
+            );
+            await sut.deleteClienteData("any_another_id");
+            expect(deleteClienteDataSpy).toHaveBeenCalledWith("any_another_id");
         });
     });
 });
