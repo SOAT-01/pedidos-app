@@ -14,12 +14,16 @@ import { BadError } from "utils/errors/badError";
 import { Cliente } from "entities/cliente";
 import { PagamentoToStatusMap } from "utils/PagamentoToStatusMap";
 import { ValidationError } from "utils/errors/validationError";
+import { PedidoModel } from "external/mongo/models";
+import { QueueManager } from "external/queueService";
 
 export class PedidoUseCase implements IPedidoUseCase {
     constructor(
+        private readonly pedidoModel: typeof PedidoModel,
         private readonly pedidoGateway: PedidoGateway,
         private readonly produtoGateway: ProdutoGateway,
         private readonly clienteGateway: ClienteGateway,
+        private readonly notificaoQueueManager: QueueManager,
     ) {}
 
     public async getAll(): Promise<PedidoDTO[]> {
@@ -118,8 +122,21 @@ export class PedidoUseCase implements IPedidoUseCase {
             throw new ResourceNotFoundError("Pedido não encontrado");
         }
 
-        const result = await this.pedidoGateway.update(id, pedido);
-        return PedidoMapper.toDTO(result);
+        const session = await this.pedidoModel.startSession();
+        session.startTransaction();
+
+        try {
+            const result = await this.pedidoGateway.update(id, pedido, session);
+
+            await session.commitTransaction();
+            await session.endSession();
+
+            return PedidoMapper.toDTO(result);
+        } catch (error) {
+            await session.abortTransaction();
+            await session.endSession();
+            throw new BadError(error);
+        }
     }
 
     public async updateStatus(
@@ -201,11 +218,46 @@ export class PedidoUseCase implements IPedidoUseCase {
 
         const statusPedido = PagamentoToStatusMap[statusPagamento];
 
-        const result = await this.pedidoGateway.update(id, {
-            status: statusPedido,
-            pagamento: statusPagamento,
-        });
+        const session = await this.pedidoModel.startSession();
+        session.startTransaction();
 
-        return PedidoMapper.toDTO(result);
+        try {
+            const result = await this.pedidoGateway.update(
+                id,
+                {
+                    status: statusPedido,
+                    pagamento: statusPagamento,
+                },
+                session,
+            );
+
+            let cliente: Cliente = null;
+
+            if (pedido?.cliente?.id) {
+                cliente = await this.clienteGateway.getById(pedido.cliente.id);
+            }
+
+            if (cliente && cliente.email) {
+                const parsedMessage = JSON.stringify({
+                    clienteId: cliente.id,
+                    clienteNome: cliente.nome,
+                    clienteEmail: cliente.email,
+                    pedidoId: pedido.id,
+                    statusPedido: pedido.status,
+                    statusPagamento: pedido.pagamento,
+                });
+
+                await this.notificaoQueueManager.enqueueMessage(parsedMessage);
+            }
+
+            await session.commitTransaction();
+            await session.endSession();
+
+            return PedidoMapper.toDTO(result);
+        } catch (error) {
+            await session.abortTransaction();
+            await session.endSession();
+            throw new BadError(error);
+        }
     }
 }

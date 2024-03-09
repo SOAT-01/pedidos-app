@@ -3,6 +3,7 @@ import { PedidoGateway } from "interfaces/gateways";
 import { Pedido, StatusPagamento, StatusPedidoEnum } from "entities/pedido";
 import { PedidoModel } from "external/mongo/models";
 import { PedidoMapper } from "adapters/mappers";
+import { ClientSession } from "mongoose";
 
 export class PedidoMongoGateway implements PedidoGateway {
     constructor(private readonly pedidoModel: typeof PedidoModel) {}
@@ -153,12 +154,14 @@ export class PedidoMongoGateway implements PedidoGateway {
     async update(
         id: string,
         pedido: Omit<Partial<Pedido>, "id" | "cliente">,
+        session: ClientSession,
     ): Promise<Pedido> {
         const result = await this.pedidoModel.findOneAndUpdate(
             { _id: id },
             pedido,
             {
                 new: true,
+                session,
             },
         );
 

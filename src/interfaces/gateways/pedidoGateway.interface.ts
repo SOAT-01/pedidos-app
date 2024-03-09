@@ -1,4 +1,5 @@
 import { Pedido, StatusPagamento, StatusPedidoEnum } from "entities/pedido";
+import { ClientSession } from "mongoose";
 import { PedidoDTO } from "useCases";
 
 export interface PedidoGateway {
@@ -9,6 +10,7 @@ export interface PedidoGateway {
     update(
         id: string,
         pedido: Omit<Partial<Pedido>, "id" | "cliente">,
+        session: ClientSession,
     ): Promise<Pedido>;
     updateStatus(id: string, status: StatusPedidoEnum): Promise<Pedido>;
     updateStatusPagamento(id: string, status: StatusPagamento): Promise<Pedido>;
