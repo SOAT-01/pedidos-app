@@ -242,9 +242,9 @@ export class PedidoUseCase implements IPedidoUseCase {
                     clienteId: cliente.id,
                     clienteNome: cliente.nome,
                     clienteEmail: cliente.email,
-                    pedidoId: pedido.id,
-                    statusPedido: pedido.status,
-                    statusPagamento: pedido.pagamento,
+                    pedidoId: result.id,
+                    statusPedido: result.status,
+                    statusPagamento: result.pagamento,
                 });
 
                 await this.notificaoQueueManager.enqueueMessage(parsedMessage);
